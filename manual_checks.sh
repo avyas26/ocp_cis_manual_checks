@@ -1,23 +1,21 @@
 #!/bin/bash
 
-new_line(){
-
-	echo -e "\n"
-}
+new_line(){ echo -e "\n"; }
+print_message() { echo $1; }
 
 clusterrole(){
 
-	echo "Cluster Role Bindings with service accounts having $1 access"
+	print_message "Cluster Role Bindings with service accounts having $1 access"
 
-	for clusterrole in $(for scc in $(oc get scc -o custom-columns=NAME:.metadata.name,Priv:.$1 | grep true | awk '{print $1}'); do oc get clusterrole -A -o custom-columns=NAME:.metadata.name,Resource:.rules[*].resourceNames | grep "\[$scc\]" | awk '{print $1}'; done) ; do oc get clusterrolebindings $clusterrole -oyaml -o custom-columns=NAME:.metadata.name,Account:.subjects[*].name 2>/dev/null; done
+	for clusterrole in $(for scc in $(oc get scc -o custom-columns=NAME:.metadata.name,Priv:.$1 | grep true | awk '{print $1}'); do oc get clusterrole -A -o custom-columns=NAME:.metadata.name,Resource:.rules[*].resourceNames | grep "\[$scc\]" | awk '{print $1}'; done) ; do oc get clusterrolebindings $clusterrole -oyaml -o custom-columns=NAME:.metadata.name,Account:.subjects[*].name 2>/dev/null; done |column -t
 
 }
 
 localrole(){
 
-	echo "Local Role Bindings with service accounts having $1 access"
+	print_message "Local Role Bindings with service accounts having $1 access"
 
-        for role in $(for scc in $(oc get scc -o custom-columns=NAME:.metadata.name,Priv:.$1 | grep true | awk '{print $1}'); do oc get role -A -o custom-columns=NAME:.metadata.name,Resource:.rules[*].resourceNames | grep "\[$scc\]" | awk '{print $1}'; done) ; do oc get rolebindings $role -oyaml -o custom-columns=NAME:.metadata.name,Account:.subjects[*].name 2>/dev/null; done
+        for role in $(for scc in $(oc get scc -o custom-columns=NAME:.metadata.name,Priv:.$1 | grep true | awk '{print $1}'); do oc get role -A -o custom-columns=NAME:.metadata.name,Resource:.rules[*].resourceNames | grep "\[$scc\]" | awk '{print $1}'; done) ; do oc get rolebindings $role -oyaml -o custom-columns=NAME:.metadata.name,Account:.subjects[*].name 2>/dev/null; done |column -t
 
 }
 
@@ -77,9 +75,80 @@ ocp4-cis-scc-limit-ipc-namespace(){
 
 }
 
+ocp4-cis-accounts-restrict-service-account-tokens(){
+
+	print_message "Pods that have automount service account token set to false"
+	oc get pods -A  -oyaml -o custom-columns=NAME:.metadata.name,Project:.metadata.namespace,SAToken:.spec.automountServiceAccountToken | grep false
+
+}
+
+ocp4-cis-accounts-unique-service-account(){
+
+	print_message "Cluster Role Bindings with default service accounts"
+	for clusterrolebinding in $(oc get clusterrolebindings --no-headers | awk '{print $1}'); do oc get clusterrolebindings $clusterrolebinding -oyaml -o custom-columns=Name:.metadata.name,Account:.subjects[*].name; done |grep default |column -t
+
+	print_message "Local Role Bindings with default service accounts"
+        for rolebinding in $(oc get rolebindings --no-headers | awk '{print $1}'); do oc get rolebindings $rolebinding -oyaml -o custom-columns=Name:.metadata.name,Account:.subjects[*].name; done |grep default |column -t
+
+}
+
+#ocp4-cis-api-server-oauth-https-serving-cert(){}
+
+#ocp4-cis-api-server-openshift-https-serving-cert(){}
+
+#ocp4-cis-file-groupowner-proxy-kubeconfig(){}
+
+#ocp4-cis-file-owner-proxy-kubeconfig(){}
+
+#ocp4-cis-general-apply-scc(){}
+
+#ocp4-cis-general-configure-imagepolicywebhook(){}
+
+ocp4-cis-general-default-namespace-use(){
+
+	print_message "Check that only openshift and default service is created in default ns"
+	oc get all -n default
+
+}
+
+#ocp4-cis-general-default-seccomp-profile(){}
+
+ocp4-cis-general-namespaces-in-use(){
+	
+	print_message "Check the namespaces created are the ones you need and are adequately administered"
+	oc get ns | grep -v -E "openshift|kube|default"
+
+}
+
+#ocp4-cis-rbac-limit-cluster-admin(){}
+
+#ocp4-cis-rbac-limit-secrets-access(){}
+
+#ocp4-cis-rbac-pod-creation-access(){}
+
+#ocp4-cis-rbac-wildcard-use(){}
+
+#ocp4-cis-scc-drop-container-capabilities(){}
+
+#ocp4-cis-scc-limit-net-raw-capability(){}
+
+ocp4-cis-secrets-consider-external-storage(){
+
+	print_message "Check with customer if they use any third party systems to store secrets"
+
+}
+
+ocp4-cis-secrets-no-environment-variables(){
+
+	print_message "Secrets mounted as environment variables"
+	oc get all -o jsonpath='{range .items[?(@..secretKeyRef)]} {.kind} {.metadata.namespace} {.metadata.name} {"\n"}{end}' -A |column -t
+
+}
+
 for manual_check in $(oc get compliancecheckresult | grep MANUAL | grep scc | awk '{print $1}')
 
 do
+	new_line
 	echo "NAME:"
 	oc get compliancecheckresult $manual_check -o jsonpath='{.metadata.name}'
 
