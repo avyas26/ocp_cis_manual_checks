@@ -157,11 +157,31 @@ ocp4-cis-general-namespaces-in-use(){
 
 }
 
-#ocp4-cis-rbac-limit-cluster-admin(){}
+ocp4-cis-rbac-limit-cluster-admin(){
 
-#ocp4-cis-rbac-limit-secrets-access(){}
+	print_message "Check the below users with cluster-admin role. Do not modify clusterrolebindings that include system: prefix"
+	oc get clusterrolebindings -o=custom-columns=NAME:.metadata.name,ROLE:.roleRef.name,SUBJECT:.subjects[*].kind | grep -v system: | grep cluster-admin | column -t
 
-#ocp4-cis-rbac-pod-creation-access(){}
+}
+
+ocp4-cis-rbac-limit-secrets-access(){
+
+	print_message "Cluster roles that have access to secrets"
+	for clusterrole in $(oc get clusterrole --no-headers -o NAME | grep -v system:); do echo $clusterrole $(oc describe  $clusterrole | grep secrets | grep -v /secrets) | grep secrets ; done
+
+	print_message "Local roles that have access to secrets"
+	for ns in $(oc get ns --no-headers -o NAME | awk -F/ '{print $2}'); do for role in $(oc get role -n $ns --no-headers -o NAME); do echo $ns $role $(oc describe  $role -n $ns | grep secrets | grep -v /secrets) | grep secrets; done;done
+
+}
+
+ocp4-cis-rbac-pod-creation-access(){
+
+	print_message "Cluster roles that have access to create pods"
+	for clusterrole in $(oc get clusterrole --no-headers -o NAME | grep -v system:); do echo $clusterrole $(oc describe  $clusterrole | grep "pods " | grep create) | grep pods ; done
+
+	print_message "Local roles that have access to create pods"
+	for ns in $(oc get ns --no-headers -o NAME | awk -F/ '{print $2}'); do for role in $(oc get role -n $ns --no-headers -o NAME); do echo $role $(oc describe  $role -n $ns | grep "pods " | grep create) | grep pods; done;done
+}
 
 #ocp4-cis-rbac-wildcard-use(){}
 
@@ -191,11 +211,11 @@ do
 
 	new_line
 	echo "Description:"
-	oc -n openshift-compliance get compliancecheckresult $manual_check -o jsonpath='{.description}' | xargs -d'\n' echo
+	oc -n openshift-compliance get compliancecheckresult $manual_check -o jsonpath='{.description}' | xargs -d'\n'
 
 	new_line
 	echo "Instructions:"
-	oc -n openshift-compliance get compliancecheckresult $manual_check -o jsonpath='{.instructions}' | xargs -d'\n' echo
+	oc -n openshift-compliance get compliancecheckresult $manual_check -o jsonpath='{.instructions}' | xargs -d'\n'
 
 	new_line
 	$manual_check
