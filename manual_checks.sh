@@ -92,17 +92,45 @@ ocp4-cis-accounts-unique-service-account(){
 
 }
 
-#ocp4-cis-api-server-oauth-https-serving-cert(){}
+ocp4-cis-api-server-oauth-https-serving-cert(){
 
-#ocp4-cis-api-server-openshift-https-serving-cert(){}
+	print_message "Type and cert data in current oauth api serving cert secret"
+	oc describe secrets serving-cert -n openshift-oauth-apiserver | grep -A3 -E "Type|Data" | column -t
 
-#ocp4-cis-file-groupowner-proxy-kubeconfig(){}
+}
 
-#ocp4-cis-file-owner-proxy-kubeconfig(){}
+ocp4-cis-api-server-openshift-https-serving-cert(){
+
+	print_message "Type and cert data in current api serving cert secret"
+        oc describe secrets serving-cert -n openshift-apiserver | grep -A3 -E "Type|Data" | column -t
+
+}
+
+ocp4-cis-file-groupowner-proxy-kubeconfig(){
+
+	print_message "File and Group ownership of /config/kube-proxy-config.yaml file"
+	for i in $(oc get pods -n openshift-sdn -l app=sdn -oname);do echo $i $(oc exec -n openshift-sdn $i -c sdn -- stat -Lc %U:%G /config/kube-proxy-config.yaml); done
+
+}
+
+ocp4-cis-file-owner-proxy-kubeconfig(){
+
+	print_message "File and Group ownership of /config/kube-proxy-config.yaml file"
+        for i in $(oc get pods -n openshift-sdn -l app=sdn -oname);do echo $i $(oc exec -n openshift-sdn $i -c sdn -- stat -Lc %U:%G /config/kube-proxy-config.yaml); done
+
+}
 
 #ocp4-cis-general-apply-scc(){}
 
-#ocp4-cis-general-configure-imagepolicywebhook(){}
+ocp4-cis-general-configure-imagepolicywebhook(){
+
+	oc get image.config.openshift.io/cluster -o yaml
+	print_message "Check for allowed and blocked registry sources in the above output"
+	print_message "Reference: https://docs.openshift.com/container-platform/4.10/openshift_images/image-configuration.html"
+
+
+}
+
 
 ocp4-cis-general-default-namespace-use(){
 
@@ -111,7 +139,16 @@ ocp4-cis-general-default-namespace-use(){
 
 }
 
-#ocp4-cis-general-default-seccomp-profile(){}
+ocp4-cis-general-default-seccomp-profile(){
+
+
+	print_message "By default,seccomp profile is set to unconfined which means that no seccomp profiles are enabled."
+	new_line
+	print_message "To enable the default seccomp profile, use the reserved value /runtime/default that will make sure that the pod uses the default policy available on the host. If the default seccomp profile is too restrictive for you, you will need to create and manage your own seccomp profiles."
+
+}
+
+
 
 ocp4-cis-general-namespaces-in-use(){
 	
@@ -145,21 +182,21 @@ ocp4-cis-secrets-no-environment-variables(){
 
 }
 
-for manual_check in $(oc get compliancecheckresult | grep MANUAL | grep scc | awk '{print $1}')
+for manual_check in $(oc -n openshift-compliance get compliancecheckresult | grep MANUAL | awk '{print $1}')
 
 do
 	new_line
 	echo "NAME:"
-	oc get compliancecheckresult $manual_check -o jsonpath='{.metadata.name}'
+	oc -n openshift-compliance get compliancecheckresult $manual_check -o jsonpath='{.metadata.name}'
 
 	new_line
 	echo "Description:"
-	oc get compliancecheckresult $manual_check -o jsonpath='{.description}' | xargs echo
+	oc -n openshift-compliance get compliancecheckresult $manual_check -o jsonpath='{.description}' | xargs -d'\n' echo
 
 	new_line
 	echo "Instructions:"
-	oc get compliancecheckresult $manual_check -o jsonpath='{.instructions}' | xargs echo
-	
+	oc -n openshift-compliance get compliancecheckresult $manual_check -o jsonpath='{.instructions}' | xargs -d'\n' echo
+
 	new_line
 	$manual_check
 done
