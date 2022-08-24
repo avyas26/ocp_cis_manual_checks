@@ -76,11 +76,16 @@ NAME:
 ocp4-cis-accounts-restrict-service-account-tokens
 
 Description:
-Restrict Automounting of Service Account Tokens Mounting service account tokens inside pods can provide an avenue for privilege escalation attacks where an attacker is able to compromise a single pod in the cluster.
+Restrict Automounting of Service Account Tokens Mounting 
+service account tokens inside pods can provide an avenue 
+for privilege escalation attacks where an attacker is able 
+to compromise a single pod in the cluster.
 
 
 Instructions:
-For each pod in the cluster, review the pod specification and ensure that pods that do not need to explicitly communicate with the API server have automountServiceAccountToken configured to false.
+For each pod in the cluster, review the pod specification 
+and ensure that pods that do not need to explicitly communicate 
+with the API server have automountServiceAccountToken configured to false.
 
 
 OUTPUT: Pods that have automount service account token set to false
