@@ -70,7 +70,11 @@ ocp4-cis-scc-limit-ipc-namespace(){
 
 ocp4-cis-accounts-restrict-service-account-tokens(){
 
-	pm "OUTPUT: Pods that have automount service account token set to false"
+
+	pm "OUTPUT: Pods that have automount service account token set to true which should be changed to false"
+	oc get pods -A  -oyaml -o custom-columns=NAME:.metadata.name,Project:.metadata.namespace,SAToken:.spec.automountServiceAccountToken | grep true; nl
+
+	pm "OUTPUT: Pods that have automount service account token already set to false"
 	oc get pods -A  -oyaml -o custom-columns=NAME:.metadata.name,Project:.metadata.namespace,SAToken:.spec.automountServiceAccountToken | grep false; nl
 
 }
@@ -85,19 +89,21 @@ ocp4-cis-accounts-unique-service-account(){
 
 }
 
-ocp4-cis-api-server-oauth-https-serving-cert(){
+# This check is not required for version 1.3.0
+# ocp4-cis-api-server-oauth-https-serving-cert(){
 
-	pm "OUTPUT: Type and cert data in current oauth api serving cert secret"
-	oc describe secrets serving-cert -n openshift-oauth-apiserver | grep -A3 -E "Type|Data" | column -t; nl
+# 	pm "OUTPUT: Type and cert data in current oauth api serving cert secret"
+# 	oc describe secrets serving-cert -n openshift-oauth-apiserver | grep -A3 -E "Type|Data" | column -t; nl
 
-}
+# }
 
-ocp4-cis-api-server-openshift-https-serving-cert(){
+# This check is not required for version 1.3.0
+# ocp4-cis-api-server-openshift-https-serving-cert(){
 
-	pm "OUTPUT: Type and cert data in current api serving cert secret"
-        oc describe secrets serving-cert -n openshift-apiserver | grep -A3 -E "Type|Data" | column -t; nl
+# 	pm "OUTPUT: Type and cert data in current api serving cert secret"
+#         oc describe secrets serving-cert -n openshift-apiserver | grep -A3 -E "Type|Data" | column -t; nl
 
-}
+# }
 
 ocp4-cis-file-groupowner-proxy-kubeconfig(){
 
@@ -113,15 +119,20 @@ ocp4-cis-file-owner-proxy-kubeconfig(){
 
 }
 
-#ocp4-cis-general-apply-scc(){}
+ocp4-cis-general-apply-scc(){
 
-ocp4-cis-general-configure-imagepolicywebhook(){
-
-	oc get image.config.openshift.io/cluster -o yaml
-	pm "OUTPUT: Check for allowed and blocked registry sources in the above output"
-	pm "Reference: https://docs.openshift.com/container-platform/4.10/openshift_images/image-configuration.html"; nl
-
+	pm "OUTPUT: Verify the SCC's for each pod and make changes if required"
+	oc get pods -A -o custom-columns=NAME:.metadata.name,SCC:.spec.securityContext; nl
 }
+
+# This check is not required for version 1.3.0
+# ocp4-cis-general-configure-imagepolicywebhook(){
+
+# 	oc get image.config.openshift.io/cluster -o yaml
+# 	pm "OUTPUT: Check for allowed and blocked registry sources in the above output"
+# 	pm "Reference: https://docs.openshift.com/container-platform/4.10/openshift_images/image-configuration.html"; nl
+
+# }
 
 
 ocp4-cis-general-default-namespace-use(){
@@ -134,9 +145,9 @@ ocp4-cis-general-default-namespace-use(){
 ocp4-cis-general-default-seccomp-profile(){
 
 
-	pm "OUTPUT: By default,seccomp profile is set to unconfined which means that no seccomp profiles are enabled."
+	pm "OUTPUT: Starting with OpenShift 4.11, restricted-v2 SCC applies to all newly created pods. The default seccomp profile runtime/default is applied to these pods."
 	nl
-	pm "To enable the default seccomp profile, use the reserved value /runtime/default that will make sure that the pod uses the default policy available on the host. If the default seccomp profile is too restrictive for you, you will need to create and manage your own seccomp profiles."
+	pm "If the default seccomp profile is too restrictive for you, you will need to create and manage your own custom seccomp profiles."
 
 }
 
@@ -146,6 +157,17 @@ ocp4-cis-general-namespaces-in-use(){
 	
 	pm "OUTPUT: Check the namespaces created are the ones you need and are adequately administered"
 	oc get ns | grep -v -E "openshift|kube|default"; nl
+
+}
+
+# This was added in 1.3.0
+ocp4-cis-rbac-least-privilege(){
+	
+	pm "OUTPUT: Check the below cluster role bindings and ensure only the required privilege is assigned to the account. This output excludes keywords: kube-system, openshift- and system:"
+	oc get clusterrolebinding.rbac -o wide | grep -v system: | grep -v openshift- | grep -v kube-system | column -t; nl
+
+	pm "OUTPUT: Check the below role bindings and ensure only the required privilege is assigned to the account. This output excludes keywords: kube-system, openshift- and system:"
+	oc get rolebinding.rbac -o wide | grep -v system: | grep -v openshift- | grep -v kube-system | column -t; nl
 
 }
 
@@ -194,7 +216,7 @@ ocp4-cis-scc-limit-net-raw-capability(){
 
 ocp4-cis-secrets-consider-external-storage(){
 
-	pm "OUTPUT: Check with customer if they use any third party systems to store secrets"
+	pm "OUTPUT: Check with customer if they use any third party system to store secrets like HashiCorp Vault"
 
 }
 
