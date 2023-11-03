@@ -4,40 +4,38 @@
 
 In OpenShift you can install compliance operator to run compliance checks for your cluster. It has several profiles based on the compliance checks required at your site. For CIS benchmarks there are two profiles: ocp4-cis and ocp4-cis-node
 
-For CIS profiles, there are around 26 `compliancecheckresult` which are `MANUAL`
+For CIS profiles, there are around 23 `compliancecheckresult` which are `MANUAL` (Listed below)
 
 ```
 $ oc get compliancecheckresult | grep MANUAL
-ocp4-cis-accounts-restrict-service-account-tokens                              MANUAL   medium
-ocp4-cis-accounts-unique-service-account                                       MANUAL   medium
-ocp4-cis-api-server-oauth-https-serving-cert                                   MANUAL   medium
-ocp4-cis-api-server-openshift-https-serving-cert                               MANUAL   medium
-ocp4-cis-configure-network-policies                                            MANUAL   high
-ocp4-cis-file-groupowner-proxy-kubeconfig                                      MANUAL   medium
-ocp4-cis-file-owner-proxy-kubeconfig                                           MANUAL   medium
-ocp4-cis-general-apply-scc                                                     MANUAL   medium
-ocp4-cis-general-configure-imagepolicywebhook                                  MANUAL   medium
-ocp4-cis-general-default-namespace-use                                         MANUAL   medium
-ocp4-cis-general-default-seccomp-profile                                       MANUAL   medium
-ocp4-cis-general-namespaces-in-use                                             MANUAL   medium
-ocp4-cis-rbac-limit-cluster-admin                                              MANUAL   medium
-ocp4-cis-rbac-limit-secrets-access                                             MANUAL   medium
-ocp4-cis-rbac-pod-creation-access                                              MANUAL   medium
-ocp4-cis-rbac-wildcard-use                                                     MANUAL   medium
-ocp4-cis-scc-drop-container-capabilities                                       MANUAL   medium
-ocp4-cis-scc-limit-ipc-namespace                                               MANUAL   medium
-ocp4-cis-scc-limit-net-raw-capability                                          MANUAL   medium
-ocp4-cis-scc-limit-network-namespace                                           MANUAL   medium
-ocp4-cis-scc-limit-privilege-escalation                                        MANUAL   medium
-ocp4-cis-scc-limit-privileged-containers                                       MANUAL   medium
-ocp4-cis-scc-limit-process-id-namespace                                        MANUAL   medium
-ocp4-cis-scc-limit-root-containers                                             MANUAL   medium
-ocp4-cis-secrets-consider-external-storage                                     MANUAL   medium
-ocp4-cis-secrets-no-environment-variables                                      MANUAL   medium
+ocp4-cis-accounts-restrict-service-account-tokens                     MANUAL   medium
+ocp4-cis-accounts-unique-service-account                              MANUAL   medium
+ocp4-cis-file-groupowner-proxy-kubeconfig                             MANUAL   medium
+ocp4-cis-file-owner-proxy-kubeconfig                                  MANUAL   medium
+ocp4-cis-general-apply-scc                                            MANUAL   medium
+ocp4-cis-general-default-namespace-use                                MANUAL   medium
+ocp4-cis-general-default-seccomp-profile                              MANUAL   medium
+ocp4-cis-general-namespaces-in-use                                    MANUAL   medium
+ocp4-cis-rbac-least-privilege                                         MANUAL   high
+ocp4-cis-rbac-limit-cluster-admin                                     MANUAL   medium
+ocp4-cis-rbac-limit-secrets-access                                    MANUAL   medium
+ocp4-cis-rbac-pod-creation-access                                     MANUAL   medium
+ocp4-cis-rbac-wildcard-use                                            MANUAL   medium
+ocp4-cis-scc-drop-container-capabilities                              MANUAL   medium
+ocp4-cis-scc-limit-ipc-namespace                                      MANUAL   medium
+ocp4-cis-scc-limit-net-raw-capability                                 MANUAL   medium
+ocp4-cis-scc-limit-network-namespace                                  MANUAL   medium
+ocp4-cis-scc-limit-privilege-escalation                               MANUAL   medium
+ocp4-cis-scc-limit-privileged-containers                              MANUAL   medium
+ocp4-cis-scc-limit-process-id-namespace                               MANUAL   medium
+ocp4-cis-scc-limit-root-containers                                    MANUAL   medium
+ocp4-cis-secrets-consider-external-storage                            MANUAL   medium
+ocp4-cis-secrets-no-environment-variables                             MANUAL   medium
 
 ```
 
-Instead of executing each check one by one you can run the script as instructions below. It outputs the `Name`, `Description`, `Instructions` and `Output of the command that checks the rule for you to verify`
+Instead of executing each check one by one you can run this script to generate the output as per the instructions defined in the compliance rule. 
+It generates the `Name`, `Description`, `Instructions` and `Output of the command that checks the rule for you to verify`
 
 NOTE
 
@@ -45,7 +43,6 @@ NOTE
 Currently the script doesn't support following MANUAL rules:
 
 - ocp4-cis-rbac-wildcard-use
-- ocp4-cis-general-apply-scc
 
 ```
 
@@ -104,7 +101,7 @@ installer-8-master03                                              openshift-kube
 
 ```
 
-Verify the output of each rule and check the result is compliant.
+Verify the output of each rule and make changes as necessary to make he result compliant.
 
 
 
